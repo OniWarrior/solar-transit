@@ -161,6 +161,7 @@ export default function Navbar() {
           <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
             <NavLink href="#destinations">Destinations</NavLink>
             <NavLink href="/login">Login</NavLink>
+            <NavLink href='/register'>Register</NavLink>
             <BookLink href="/book">Book a Flight</BookLink>
           </Box>
 
