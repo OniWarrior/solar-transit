@@ -154,12 +154,12 @@ export default function Navbar() {
           {/* Logo */}
           <LogoMark sx={{ flexGrow: 1 }}>
             <RocketLaunchIcon sx={{ color: '#c9a84c', fontSize: 22 }} />
-            <LogoText>Solar Transit</LogoText>
+            <LogoText><NavLink href="/">Solar Transit</NavLink></LogoText>
           </LogoMark>
 
           {/* Desktop nav — hidden below 600px */}
           <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
-            <NavLink href="#destinations">Destinations</NavLink>
+            <NavLink href="/destinations">Destinations</NavLink>
             <NavLink href="/login">Login</NavLink>
             <NavLink href='/register'>Register</NavLink>
             <BookLink href="/book">Book a Flight</BookLink>

@@ -164,7 +164,7 @@ export default function HeroSection() {
           Reserve civilian journeys across the solar system
         </Subheadline>
         <CTAGroup>
-          <PrimaryButton startIcon={<ExploreIcon />} href="#destinations">
+          <PrimaryButton startIcon={<ExploreIcon />} href="/destinations">
             Explore Destinations
           </PrimaryButton>
           <SecondaryButton startIcon={<RocketLaunchIcon />} href="/book">
