@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession, signOut } from 'next-auth/react';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Box from '@mui/material/Box';
@@ -56,12 +57,29 @@ const BookLink = styled('a')({
   },
 });
 
-const LogoMark = styled(Box)({
+const LogoutBtn = styled('button')({
+  fontFamily: '"Orbitron", sans-serif',
+  fontSize: '0.72rem',
+  fontWeight: 400,
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+  color: 'rgba(255,255,255,0.75)',
+  textDecoration: 'none',
+  padding: '6px 16px',
+  background: 'transparent',
+  border: 'none',
+  cursor: 'pointer',
+  transition: 'color 0.2s ease',
+  '&:hover': { color: '#ffffff' },
+});
+
+const LogoMark = styled('a')({
   display: 'flex',
   alignItems: 'center',
   gap: '10px',
   cursor: 'pointer',
   userSelect: 'none',
+  textDecoration: 'none',
 });
 
 const LogoText = styled('span')({
@@ -106,6 +124,25 @@ const DrawerNavLink = styled('a')({
   '&:hover': { color: '#ffffff' },
 });
 
+const DrawerLogoutBtn = styled('button')({
+  fontFamily: '"Orbitron", sans-serif',
+  fontSize: '0.8rem',
+  fontWeight: 400,
+  letterSpacing: '0.15em',
+  textTransform: 'uppercase',
+  color: 'rgba(255,255,255,0.7)',
+  textDecoration: 'none',
+  padding: '14px 0',
+  width: '100%',
+  display: 'block',
+  background: 'transparent',
+  border: 'none',
+  cursor: 'pointer',
+  textAlign: 'left',
+  transition: 'color 0.2s ease',
+  '&:hover': { color: '#ffffff' },
+});
+
 const DrawerBookLink = styled('a')({
   fontFamily: '"Orbitron", sans-serif',
   fontSize: '0.78rem',
@@ -130,6 +167,8 @@ const StyledDivider = styled(Divider)({
 });
 
 export default function Navbar() {
+  const { data: session, status } = useSession();
+  const isLoggedIn = status === 'authenticated';
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -146,26 +185,42 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleLogout = () => {
+    setDrawerOpen(false);
+    signOut({ callbackUrl: '/' });
+  };
+
   return (
     <>
       <StyledAppBar id="solar-appbar" position="fixed">
         <Toolbar sx={{ maxWidth: '1200px', width: '100%', mx: 'auto', px: { xs: 2, md: 4 }, py: 1 }}>
 
           {/* Logo */}
-          <LogoMark sx={{ flexGrow: 1 }}>
+          <LogoMark href="/" sx={{ flexGrow: 1 }}>
             <RocketLaunchIcon sx={{ color: '#c9a84c', fontSize: 22 }} />
-            <LogoText><NavLink href="/">Solar Transit</NavLink></LogoText>
+            <LogoText>Solar Transit</LogoText>
           </LogoMark>
 
-          {/* Desktop nav — hidden below 600px */}
+          {/* Desktop nav */}
           <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
             <NavLink href="/destinations">Destinations</NavLink>
-            <NavLink href="/login">Login</NavLink>
-            <NavLink href='/register'>Register</NavLink>
-            <BookLink href="/book">Book a Flight</BookLink>
+
+            {isLoggedIn ? (
+              <>
+                <NavLink href="/dashboard">Dashboard</NavLink>
+                <LogoutBtn onClick={handleLogout}>Logout</LogoutBtn>
+                <BookLink href="/book">Book a Flight</BookLink>
+              </>
+            ) : (
+              <>
+                <NavLink href="/login">Login</NavLink>
+                <NavLink href="/register">Register</NavLink>
+                <BookLink href="/book">Book a Flight</BookLink>
+              </>
+            )}
           </Box>
 
-          {/* Hamburger — visible below 600px */}
+          {/* Hamburger */}
           <IconButton
             onClick={() => setDrawerOpen(true)}
             sx={{ display: { xs: 'flex', sm: 'none' }, color: '#fff' }}
@@ -200,14 +255,34 @@ export default function Navbar() {
           </DrawerHeader>
 
           <StyledDivider />
-          <DrawerNavLink href="#destinations" onClick={() => setDrawerOpen(false)}>
+          <DrawerNavLink href="/destinations" onClick={() => setDrawerOpen(false)}>
             Destinations
           </DrawerNavLink>
           <StyledDivider />
-          <DrawerNavLink href="/login" onClick={() => setDrawerOpen(false)}>
-            Login
-          </DrawerNavLink>
-          <StyledDivider />
+
+          {isLoggedIn ? (
+            <>
+              <DrawerNavLink href="/dashboard" onClick={() => setDrawerOpen(false)}>
+                Dashboard
+              </DrawerNavLink>
+              <StyledDivider />
+              <DrawerLogoutBtn onClick={handleLogout}>
+                Logout
+              </DrawerLogoutBtn>
+              <StyledDivider />
+            </>
+          ) : (
+            <>
+              <DrawerNavLink href="/login" onClick={() => setDrawerOpen(false)}>
+                Login
+              </DrawerNavLink>
+              <StyledDivider />
+              <DrawerNavLink href="/register" onClick={() => setDrawerOpen(false)}>
+                Register
+              </DrawerNavLink>
+              <StyledDivider />
+            </>
+          )}
 
           <DrawerBookLink href="/book" onClick={() => setDrawerOpen(false)}>
             Book a Flight

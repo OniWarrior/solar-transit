@@ -1,56 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import Slider from '@mui/material/Slider';
 import IconButton from '@mui/material/IconButton';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
 import { styled, keyframes } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import CloseIcon from '@mui/icons-material/Close';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 
 // ── Types ──────────────────────────────────────────────────────
 interface Flight {
   id: string;
-
-  from: string;
-  to: string;
+  flightNumber: string;
+  planet: string;
+  fromLocation: string;
+  toLocation: string;
   departure: string;
   arrival: string;
   duration: string;
-  planet: string;
 }
 
-// ── Flight data ────────────────────────────────────────────────
-const flights: Flight[] = [
-  // Mars
-  { id: 'ST-M01', planet: 'Mars', from: 'Earth — Kennedy Orbital Hub', to: 'Mars — Olympus Mons Terminal', departure: 'Sol 14 | 06:00 UTC', arrival: 'Sol 221 | 14:32 UTC', duration: '207 days', },
-  { id: 'ST-M02', planet: 'Mars', from: 'Earth — Kennedy Orbital Hub', to: 'Mars — Hellas Basin Station', departure: 'Sol 14 | 11:45 UTC', arrival: 'Sol 224 | 08:10 UTC', duration: '210 days', },
-  { id: 'ST-M03', planet: 'Mars', from: 'Earth — Kennedy Orbital Hub', to: 'Mars — Valles Marineris Port', departure: 'Sol 15 | 22:00 UTC', arrival: 'Sol 223 | 17:55 UTC', duration: '208 days', },
-  // Europa
-  { id: 'ST-E01', planet: 'Europa', from: 'Earth — Kennedy Orbital Hub', to: 'Europa — Poseidon Dock Alpha', departure: 'Sol 16 | 08:00 UTC', arrival: 'Sol 414 | 09:20 UTC', duration: '398 days', },
-  { id: 'ST-E02', planet: 'Europa', from: 'Earth — Kennedy Orbital Hub', to: 'Europa — Nereid Station', departure: 'Sol 16 | 15:30 UTC', arrival: 'Sol 416 | 11:00 UTC', duration: '400 days', },
-  { id: 'ST-E03', planet: 'Europa', from: 'Earth — Kennedy Orbital Hub', to: 'Europa — Triton Relay Outpost', departure: 'Sol 18 | 04:15 UTC', arrival: 'Sol 418 | 22:45 UTC', duration: '400 days', },
-  // Titan
-  { id: 'ST-T01', planet: 'Titan', from: 'Earth — Kennedy Orbital Hub', to: 'Titan — Cassini Landing Zone', departure: 'Sol 20 | 07:00 UTC', arrival: 'Sol 497 | 16:40 UTC', duration: '477 days', },
-  { id: 'ST-T02', planet: 'Titan', from: 'Earth — Kennedy Orbital Hub', to: 'Titan — Huygens Colony Hub', departure: 'Sol 21 | 13:00 UTC', arrival: 'Sol 499 | 10:15 UTC', duration: '478 days', },
-  { id: 'ST-T03', planet: 'Titan', from: 'Earth — Kennedy Orbital Hub', to: 'Titan — Kraken Mare Port', departure: 'Sol 22 | 20:00 UTC', arrival: 'Sol 501 | 06:30 UTC', duration: '479 days', },
-  // Lunar Gateway
-  { id: 'ST-L01', planet: 'Lunar Gateway', from: 'Earth — Kennedy Orbital Hub', to: 'Lunar Gateway — Platform A', departure: 'Sol 14 | 09:00 UTC', arrival: 'Sol 15 | 03:45 UTC', duration: '18 hrs', },
-  { id: 'ST-L02', planet: 'Lunar Gateway', from: 'Earth — Kennedy Orbital Hub', to: 'Lunar Gateway — Platform B', departure: 'Sol 14 | 17:00 UTC', arrival: 'Sol 15 | 11:30 UTC', duration: '18 hrs', },
-  { id: 'ST-L03', planet: 'Lunar Gateway', from: 'Earth — Kennedy Orbital Hub', to: 'Lunar Gateway — Platform C', departure: 'Sol 15 | 06:00 UTC', arrival: 'Sol 16 | 00:15 UTC', duration: '18 hrs', },
-];
-
+// ── Planet filter data ─────────────────────────────────────────
 const planets = [
   { name: 'Mars', image: '/images/Mars.png' },
   { name: 'Europa', image: '/images/Europa.png' },
   { name: 'Titan', image: '/images/Titan.png' },
-  { name: 'Lunar Gateway', image: '/images/lunar_gateway.png' },
+  { name: 'Lunar Gateway', image: '/images/Lunar_Gateway.png' },
 ];
 
 // ── Animations ─────────────────────────────────────────────────
@@ -67,7 +51,6 @@ const PageWrapper = styled(Box)({
   flexDirection: 'column',
 });
 
-// Hero
 const HeroWrapper = styled(Box)({
   position: 'relative',
   width: '100%',
@@ -106,9 +89,9 @@ const ScrollChevron = styled(Box)({
   transform: 'translateX(-50%)',
   zIndex: 2,
   opacity: 0.6,
+  cursor: 'pointer',
 });
 
-// Filter buttons
 const FilterRow = styled(Box)({
   display: 'flex',
   gap: '12px',
@@ -160,7 +143,6 @@ const FilterOverlay = styled(Box)({
   background: 'rgba(0,0,0,0.25)',
 });
 
-// Flight list
 const FlightList = styled(Box)({
   maxWidth: '860px',
   width: '100%',
@@ -234,16 +216,6 @@ const DurationBadge = styled(Box)({
   textTransform: 'uppercase',
 });
 
-const NoFlights = styled(Typography)({
-  fontFamily: '"Raleway", sans-serif',
-  fontSize: '0.95rem',
-  color: 'rgba(255,255,255,0.35)',
-  textAlign: 'center',
-  padding: '48px 0',
-  letterSpacing: '0.04em',
-});
-
-// Modal
 const ModalBox = styled(Box)({
   position: 'absolute',
   top: '50%',
@@ -298,7 +270,7 @@ const CounterBtn = styled(IconButton)({
   '&:disabled': { opacity: 0.3 },
 });
 
-const BookBtn = styled('a')({
+const BookBtn = styled('button')({
   display: 'block',
   width: '100%',
   fontFamily: '"Orbitron", sans-serif',
@@ -307,25 +279,47 @@ const BookBtn = styled('a')({
   letterSpacing: '0.15em',
   textTransform: 'uppercase',
   color: '#000',
-  textDecoration: 'none',
   background: 'linear-gradient(135deg, #e8d5a3, #c9a84c)',
   padding: '14px 0',
   borderRadius: '999px',
   textAlign: 'center',
   cursor: 'pointer',
+  border: 'none',
   transition: 'opacity 0.2s ease',
   '&:hover': { opacity: 0.88 },
+  '&:disabled': { opacity: 0.5, cursor: 'not-allowed' },
 });
 
 // ── Component ──────────────────────────────────────────────────
 export default function BookFlightPage() {
+  const [flights, setFlights] = useState<Flight[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
   const [ticketCount, setTicketCount] = useState(1);
+  const [bookingStatus, setBookingStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [bookingMessage, setBookingMessage] = useState('');
 
-  const visibleFlights = activeFilter
-    ? flights.filter((f) => f.planet === activeFilter)
-    : flights;
+  // Fetch flights from API
+  useEffect(() => {
+    const fetchFlights = async () => {
+      setLoading(true);
+      try {
+        const url = activeFilter
+          ? `/api/flights?planet=${encodeURIComponent(activeFilter)}`
+          : '/api/flights';
+        const res = await fetch(url);
+        const data = await res.json();
+        setFlights(data.flights ?? []);
+      } catch {
+        setFlights([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFlights();
+  }, [activeFilter]);
 
   const handleFilterClick = (name: string) => {
     setActiveFilter((prev) => (prev === name ? null : name));
@@ -334,9 +328,44 @@ export default function BookFlightPage() {
   const handleFlightClick = (flight: Flight) => {
     setSelectedFlight(flight);
     setTicketCount(1);
+    setBookingStatus('idle');
+    setBookingMessage('');
   };
 
-  const handleClose = () => setSelectedFlight(null);
+  const handleClose = () => {
+    if (bookingStatus === 'loading') return;
+    setSelectedFlight(null);
+    setBookingStatus('idle');
+  };
+
+  const handleBookFlight = async () => {
+    if (!selectedFlight) return;
+    setBookingStatus('loading');
+
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          flightId: selectedFlight.id,
+          ticketCount,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setBookingStatus('error');
+        setBookingMessage(data.message || 'Booking failed. Please try again.');
+      } else {
+        setBookingStatus('success');
+        setBookingMessage(`Booking confirmed! Flight ${selectedFlight.flightNumber} — ${ticketCount} ticket${ticketCount > 1 ? 's' : ''}.`);
+      }
+    } catch {
+      setBookingStatus('error');
+      setBookingMessage('Something went wrong. Please try again.');
+    }
+  };
 
   const scrollToFlights = () => {
     document.getElementById('flights-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -357,7 +386,7 @@ export default function BookFlightPage() {
         />
         <HeroOverlay />
         <HeroTitle>Book A Flight</HeroTitle>
-        <ScrollChevron onClick={scrollToFlights} sx={{ cursor: 'pointer' }}>
+        <ScrollChevron onClick={scrollToFlights}>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
             <polyline points="6 9 12 15 18 9" />
           </svg>
@@ -403,22 +432,26 @@ export default function BookFlightPage() {
 
         {/* Flight cards */}
         <FlightList>
-          {visibleFlights.length === 0 ? (
-            <NoFlights>No flights available for this destination.</NoFlights>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+              <CircularProgress sx={{ color: '#c9a84c' }} />
+            </Box>
+          ) : flights.length === 0 ? (
+            <Typography sx={{ fontFamily: '"Raleway", sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.35)', textAlign: 'center', padding: '48px 0' }}>
+              No flights available for this destination.
+            </Typography>
           ) : (
-            visibleFlights.map((flight, i) => (
+            flights.map((flight, i) => (
               <FlightCard
                 key={flight.id}
                 onClick={() => handleFlightClick(flight)}
                 sx={{ animationDelay: `${i * 0.06}s` }}
               >
                 <Box>
-                  <FlightId>{flight.id}</FlightId>
-                  <RouteText>
-                    {flight.from}
-                  </RouteText>
+                  <FlightId>{flight.flightNumber}</FlightId>
+                  <RouteText>{flight.fromLocation}</RouteText>
                   <RouteText sx={{ color: '#c9a84c', mb: '8px' }}>
-                    → {flight.to}
+                    → {flight.toLocation}
                   </RouteText>
                   <MetaText>
                     Departs: {flight.departure} &nbsp;·&nbsp; Arrives: {flight.arrival}
@@ -455,7 +488,6 @@ export default function BookFlightPage() {
 
           {selectedFlight && (
             <>
-              {/* Flight reference */}
               <Typography sx={{
                 fontFamily: '"Orbitron", sans-serif',
                 fontSize: '0.6rem',
@@ -465,52 +497,79 @@ export default function BookFlightPage() {
                 mb: '8px',
                 textTransform: 'uppercase',
               }}>
-                {selectedFlight.id} · {selectedFlight.planet}
+                {selectedFlight.flightNumber} · {selectedFlight.planet}
               </Typography>
 
-              <ModalTitle>
-                How many tickets<br />do you wish to purchase?
-              </ModalTitle>
+              {/* Success state */}
+              {bookingStatus === 'success' ? (
+                <Box sx={{ textAlign: 'center', py: 2 }}>
+                  <CheckCircleOutlineIcon sx={{ color: '#c9a84c', fontSize: 48, mb: 2 }} />
+                  <Typography sx={{
+                    fontFamily: '"Raleway", sans-serif',
+                    fontSize: '0.95rem',
+                    color: 'rgba(255,255,255,0.8)',
+                    lineHeight: 1.7,
+                  }}>
+                    {bookingMessage}
+                  </Typography>
+                </Box>
+              ) : (
+                <>
+                  <ModalTitle>
+                    How many tickets<br />do you wish to purchase?
+                  </ModalTitle>
 
-              <TicketCount>{ticketCount}</TicketCount>
+                  {bookingStatus === 'error' && (
+                    <Alert severity="error" sx={{ mb: 2, background: 'rgba(211,47,47,0.15)', color: '#ff6b6b', border: '1px solid rgba(211,47,47,0.3)' }}>
+                      {bookingMessage}
+                    </Alert>
+                  )}
 
-              <CounterRow>
-                <CounterBtn
-                  onClick={() => setTicketCount((n) => Math.max(1, n - 1))}
-                  disabled={ticketCount <= 1}
-                >
-                  <RemoveIcon fontSize="small" />
-                </CounterBtn>
+                  <TicketCount>{ticketCount}</TicketCount>
 
-                <Slider
-                  value={ticketCount}
-                  min={1}
-                  max={10}
-                  step={1}
-                  onChange={(_, val) => setTicketCount(val as number)}
-                  sx={{
-                    flex: 1,
-                    color: '#c9a84c',
-                    '& .MuiSlider-thumb': {
-                      background: '#c9a84c',
-                      '&:hover': { boxShadow: '0 0 0 8px rgba(201,168,76,0.16)' },
-                    },
-                    '& .MuiSlider-track': { background: '#c9a84c', border: 'none' },
-                    '& .MuiSlider-rail': { background: 'rgba(255,255,255,0.15)' },
-                  }}
-                />
+                  <CounterRow>
+                    <CounterBtn
+                      onClick={() => setTicketCount((n) => Math.max(1, n - 1))}
+                      disabled={ticketCount <= 1 || bookingStatus === 'loading'}
+                    >
+                      <RemoveIcon fontSize="small" />
+                    </CounterBtn>
 
-                <CounterBtn
-                  onClick={() => setTicketCount((n) => Math.min(10, n + 1))}
-                  disabled={ticketCount >= 10}
-                >
-                  <AddIcon fontSize="small" />
-                </CounterBtn>
-              </CounterRow>
+                    <Slider
+                      value={ticketCount}
+                      min={1}
+                      max={10}
+                      step={1}
+                      onChange={(_, val) => setTicketCount(val as number)}
+                      disabled={bookingStatus === 'loading'}
+                      sx={{
+                        flex: 1,
+                        color: '#c9a84c',
+                        '& .MuiSlider-thumb': {
+                          background: '#c9a84c',
+                          '&:hover': { boxShadow: '0 0 0 8px rgba(201,168,76,0.16)' },
+                        },
+                        '& .MuiSlider-track': { background: '#c9a84c', border: 'none' },
+                        '& .MuiSlider-rail': { background: 'rgba(255,255,255,0.15)' },
+                      }}
+                    />
 
-              <BookBtn>
-                Book Flight
-              </BookBtn>
+                    <CounterBtn
+                      onClick={() => setTicketCount((n) => Math.min(10, n + 1))}
+                      disabled={ticketCount >= 10 || bookingStatus === 'loading'}
+                    >
+                      <AddIcon fontSize="small" />
+                    </CounterBtn>
+                  </CounterRow>
+
+                  <BookBtn
+                    onClick={handleBookFlight}
+                    disabled={bookingStatus === 'loading'}
+                  >
+                    {bookingStatus === 'loading' ? 'Booking...' : 'Book Flight'}
+                  </BookBtn>
+                </>
+              )}
             </>
           )}
         </ModalBox>

@@ -1,4 +1,5 @@
 'use client';
+import { useSession } from 'next-auth/react';
 
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -60,6 +61,8 @@ const CTAButton = styled(Button)({
 });
 
 export default function CTABanner() {
+  const { data: session } = useSession();
+  const href = session ? '/book' : '/login';
   const contentRef = useScrollReveal<HTMLDivElement>({ threshold: 0.2 });
 
   return (
@@ -68,10 +71,7 @@ export default function CTABanner() {
         <Headline>What are you waiting for?</Headline>
         <Subheadline>Book a flight today!</Subheadline>
         <GoldDivider />
-        <CTAButton
-          href="/book"
-          startIcon={<RocketLaunchIcon sx={{ fontSize: 16 }} />}
-        >
+        <CTAButton href={href} startIcon={<RocketLaunchIcon sx={{ fontSize: 16 }} />}>
           Explore Flights
         </CTAButton>
       </Box>
