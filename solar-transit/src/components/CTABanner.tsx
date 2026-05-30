@@ -1,4 +1,6 @@
 'use client';
+
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 
 import Box from '@mui/material/Box';
@@ -62,7 +64,13 @@ const CTAButton = styled(Button)({
 
 export default function CTABanner() {
   const { data: session } = useSession();
-  const href = session ? '/book' : '/login';
+  const [href, setHref] = useState('/login');
+
+  useEffect(() => {
+    if (session) setHref('/book');
+    else setHref('/login');
+  }, [session]);
+
   const contentRef = useScrollReveal<HTMLDivElement>({ threshold: 0.2 });
 
   return (
