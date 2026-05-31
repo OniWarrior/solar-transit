@@ -1,6 +1,0 @@
-{
-  "buildCommand": "cd solar-transit && npx prisma generate && npm run build",
-  "outputDirectory": "solar-transit/.next",
-  "installCommand": "cd solar-transit && npm install",
-  "framework": "nextjs"
-}
