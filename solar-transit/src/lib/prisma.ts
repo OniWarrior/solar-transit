@@ -1,10 +1,9 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../prisma/client/client';
 
-// Required for Heroku Postgres SSL certificates in development
-if (process.env.NODE_ENV !== 'production') {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-}
+
+// Required for Heroku Postgres SSL certificate
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
